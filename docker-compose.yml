@@ -63,6 +63,12 @@ services:
     environment:
       PORT: 8080
       DB_CONNECTION_STRING: postgres://postgres:postgres_password@postgres:5432/cinemaabyss?sslmode=disable
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - cinemaabyss-network
 
@@ -83,43 +89,59 @@ services:
       - cinemaabyss-network
 
   # Events Microservice
-  events-service:
-    build:
-      context: ./src/microservices/events
-      dockerfile: Dockerfile
-    container_name: cinemaabyss-events-service
-    depends_on:
-      - postgres
-      - kafka
-    ports:
-      - "8082:8082"
-    environment:
-      PORT: 8082
-      KAFKA_BROKERS: kafka:9092
-    networks:
-      - cinemaabyss-network
+#  events-service:
+#    build:
+#      context: ./src/microservices/events
+#      dockerfile: Dockerfile
+#    container_name: cinemaabyss-events-service
+#    depends_on:
+#      - postgres
+#      - kafka
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      PORT: 8082
+#      KAFKA_BROKERS: kafka:9092
+#    networks:
+#      - cinemaabyss-network
 
   # Proxy Service (API Gateway)
   proxy-service:
     build:
-      context: ./src/microservices/proxy
+      context: src/microservices/proxy
       dockerfile: Dockerfile
+    ports:
+      - "8000:8000" # Используем порт из ENV
     container_name: cinemaabyss-proxy-service
     depends_on:
       - monolith
       - movies-service
-      - events-service
-    ports:
-      - "8000:8000"
+      - consul
+#      - events-service
+
     environment:
       PORT: 8000
       MONOLITH_URL: http://monolith:8080
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
-      MOVIES_MIGRATION_PERCENT: "50"
+      MOVIES_MIGRATION_PERCENT: 50
     networks:
       - cinemaabyss-network
+    healthcheck: # Проверка здоровья для consul-template
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  consul:
+    image: hashicorp/consul:1.15
+    command: 'agent -dev -client=0.0.0.0' # Запуск Consul в режиме разработки
+    ports:
+      - "8500:8500" # Порт UI и API
+    networks:
+      - cinemaabyss-network
+
 
   # Kafka UI for monitoring Kafka
   kafka-ui:

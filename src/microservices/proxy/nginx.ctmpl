@@ -1,0 +1,56 @@
+
+{{ $monolith_url := env "MONOLITH_URL" | trim " \t\r\n" }}
+{{ $movies_url := env "MOVIES_SERVICE_URL" | trim " \t\r\n" }}
+{{ $port := env "PORT" | trim " \t\r\n" }}
+
+
+{{ $migration_enabled := keyOrDefault "canary/GRADUAL_MIGRATION" (env "GRADUAL_MIGRATION") | trim " \t\r\n" }}
+{{ $canary_weight := keyOrDefault "canary/MOVIES_MIGRATION_PERCENT" (env "MOVIES_MIGRATION_PERCENT") | trim " \t\r\n" }}
+
+
+
+user  nginx;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format canary_log '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for" $upstream_addr $request_time';
+
+    upstream api_gateway_split {
+
+        {{ if (eq $migration_enabled "true") }}
+        {{ $cw := $canary_weight  | parseInt }}
+        {{ $mw := subtract $cw 100}}
+         server monolith:8080 weight={{ $mw }};
+         server movies-service:8081 weight={{ $cw }};
+        {{ else }}
+          server monolith:8080 weight=100;
+          server movies-service:8081 down;
+        {{ end }}
+    }
+
+    server {
+        listen {{ $port }};
+        server_name _;
+
+        access_log /var/log/nginx/canary_access.log canary_log;
+
+        location / {
+            proxy_pass http://api_gateway_split;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
