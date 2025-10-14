@@ -97,6 +97,12 @@ services:
     depends_on:
       - postgres
       - kafka
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8082/api/events/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
       - "8082:8082"
     environment:
@@ -114,10 +120,15 @@ services:
       - "8000:8000" # Используем порт из ENV
     container_name: cinemaabyss-proxy-service
     depends_on:
-      - monolith
-      - movies-service
-      - consul
-#      - events-service
+      monolith:
+        condition: service_started
+      events-service:
+        condition: service_healthy
+      movies-service:
+        condition: service_started
+      consul:
+        condition: service_started
+
 
     environment:
       PORT: 8000
