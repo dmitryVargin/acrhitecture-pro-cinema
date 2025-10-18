@@ -4,7 +4,6 @@ set -euo pipefail
 # Configuration
 TEMPLATE_SRC=${TEMPLATE_SRC:-/etc/nginx/templates/nginx.ctmpl}
 TEMPLATE_DST=${TEMPLATE_DST:-/etc/nginx/nginx.conf}
-CONSUL_ADDR=${CONSUL_ADDR:-http://consul:8500}
 
 # Show some diagnostics
 echo "[entrypoint] Using consul at: ${CONSUL_ADDR}"
@@ -15,7 +14,7 @@ mkdir -p "$(dirname "${TEMPLATE_DST}")"
 
 
 consul-template \
-  -consul-addr="http://consul:8500" \
+  -consul-addr="${CONSUL_ADDR}" \
   -once \
   -template "/etc/nginx/templates/nginx.ctmpl:/etc/nginx/nginx.conf"
 

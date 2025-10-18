@@ -24,15 +24,6 @@ COPY nginx.ctmpl /etc/nginx/templates/nginx.ctmpl
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Default envs (can be overridden by docker-compose)
-ENV PORT=8000 \
-    MONOLITH_URL=http://monolith:8080 \
-    MOVIES_SERVICE_URL=http://movies-service:8081 \
-    EVENTS_SERVICE_URL=http://events-service:8082 \
-    GRADUAL_MIGRATION=true \
-    MOVIES_MIGRATION_PERCENT=50 \
-    CONSUL_ADDR=http://consul:8500
-
 EXPOSE 8000
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
