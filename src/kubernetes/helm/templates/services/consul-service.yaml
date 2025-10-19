@@ -1,0 +1,73 @@
+{{- if .Values.consul.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consul
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: consul
+    app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.consul.replicas }}
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      containers:
+      - name: consul
+        image: {{ .Values.consul.image.repository }}:{{ .Values.consul.image.tag }}
+        imagePullPolicy: {{ .Values.consul.image.pullPolicy }}
+        args:
+        - "agent"
+        - "-dev"
+        - "-client=0.0.0.0"
+        ports:
+        - containerPort: {{ .Values.consul.service.targetPort }}
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /v1/status/leader
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /v1/status/leader
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: {{ .Values.consul.requests.cpu }}
+            memory: {{ .Values.consul.requests.memory }}
+          limits:
+            cpu: {{ .Values.consul.limits.cpu }}
+            memory: {{ .Values.consul.limits.memory }}
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerconfigjson
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: consul
+    app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  selector:
+    app: consul
+  ports:
+  - name: http
+    port: {{ .Values.consul.service.port }}
+    targetPort: {{ .Values.consul.service.targetPort }}
+    protocol: TCP
+  type: {{ .Values.consul.service.type }}
+{{- end }}
