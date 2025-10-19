@@ -17,4 +17,5 @@ data:
   
   # Strangler Fig configuration
   GRADUAL_MIGRATION: "true"
+  #Can't be 0. Set GRADUAL_MIGRATION to "false" to disable gradual migration
   MOVIES_MIGRATION_PERCENT: "50"

@@ -27,6 +27,7 @@ function baseRecord(level: LogLevel, msg: string, extra?: Record<string, any>) {
 export const logger = {
   async info(message: string, extra?: Record<string, any>) {
     const rec = baseRecord('info', message, extra);
+    console.log(JSON.stringify(rec));
     await appendLine(JSON.stringify(rec));
   },
   async error(message: string, extra?: Record<string, any>) {
@@ -37,6 +38,7 @@ export const logger = {
       errExtra.error = { name: e.name, message: e.message, stack: e.stack };
     }
     const rec = baseRecord('error', message, errExtra);
+    console.log(JSON.stringify(rec));
     await appendLine(JSON.stringify(rec));
   },
   async warn(message: string, extra?: Record<string, any>) {

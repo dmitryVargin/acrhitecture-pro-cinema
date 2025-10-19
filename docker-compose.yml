@@ -137,6 +137,7 @@ services:
       MOVIES_SERVICE_URL: http://movies-service:8081
       EVENTS_SERVICE_URL: http://events-service:8082
       GRADUAL_MIGRATION: "true"
+#     Can't be 0. Set GRADUAL_MIGRATION to "false" to disable gradual migration
       MOVIES_MIGRATION_PERCENT: 50
     networks:
       - cinemaabyss-network
