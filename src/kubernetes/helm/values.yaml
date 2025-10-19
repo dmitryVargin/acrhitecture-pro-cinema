@@ -3,9 +3,6 @@ global:
   namespace: cinemaabyss
   domain: cinemaabyss.example.com
 
-# Image pull secrets
-imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
 # Database configuration
 database:
   host: postgres
@@ -33,7 +30,7 @@ database:
 monolith:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/monolith
+    repository: ghcr.io/dmitryvargin/acrhitecture-pro-cinema/monolith
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -53,7 +50,7 @@ monolith:
 proxyService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/proxy-service
+    repository: ghcr.io/dmitryvargin/acrhitecture-pro-cinema/proxy-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -73,7 +70,7 @@ proxyService:
 moviesService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/movies-service
+    repository: ghcr.io/dmitryvargin/acrhitecture-pro-cinema/movies-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -89,11 +86,29 @@ moviesService:
     targetPort: 8081
     type: ClusterIP
 
+consul:
+  enabled: true
+  image:
+    repository: hashicorp/consul
+    tag: 1.15
+    pullPolicy: Always
+  replicas: 1
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  service:
+    port: 8500
+    targetPort: 8500
+    type: ClusterIP
+
 # Events service configuration
 eventsService:
   enabled: true
   image:
-    repository: ghcr.io/db-exp/cinemaabysstest/events-service
+    repository: ghcr.io/dmitryvargin/acrhitecture-pro-cinema/events-service
     tag: latest
     pullPolicy: Always
   replicas: 1
@@ -182,4 +197,4 @@ ingress:
 config:
   # Strangler Fig configuration
   gradualMigration: "true"
-  moviesMigrationPercent: "100"
+  moviesMigrationPercent: "50"

@@ -51,7 +51,9 @@ func main() {
 	defer db.Close()
 
 	// Set up HTTP routes
-	http.HandleFunc("/health", healthHandler)
+    http.HandleFunc("/health", healthHandler)
+	// Unify with microservice
+	http.HandleFunc("/api/movies/health", healthHandler)
 	http.HandleFunc("/api/users", handleUsers)
 	http.HandleFunc("/api/movies", handleMovies)
 	http.HandleFunc("/api/payments", handlePayments)

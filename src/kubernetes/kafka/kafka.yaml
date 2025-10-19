@@ -29,6 +29,18 @@ spec:
     requests:
       storage: 1Gi
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zookeeper-log
+  namespace: cinemaabyss
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -70,6 +82,8 @@ spec:
         volumeMounts:
         - name: zookeeper-data
           mountPath: /var/lib/zookeeper/data
+        - name: zookeeper-log
+          mountPath: /var/lib/zookeeper/log
         readinessProbe:
           tcpSocket:
             port: 2181
@@ -84,6 +98,9 @@ spec:
       - name: zookeeper-data
         persistentVolumeClaim:
           claimName: zookeeper-data
+      - name: zookeeper-log
+        persistentVolumeClaim:
+          claimName: zookeeper-log
 ---
 apiVersion: v1
 kind: Service
